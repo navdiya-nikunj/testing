@@ -13,6 +13,13 @@ describe('Blog app', () => {
                 password: 'root'
             }
         })
+        await request.post('http://localhost:3003/api/users', {
+            data: {
+                name: "Testt",
+                username: 'test',
+                password: 'test'
+            }
+        })
         console.log(res);
     })
 
@@ -71,6 +78,16 @@ describe('Blog app', () => {
             // await page.getByRole('button').click();
             await page.getByText('blog by Nikunj is deleted').waitFor();
             await expect(page.getByText('blog by Nikunj is deleted')).toBeVisible();
+        })
+
+        test('authorised can see the delete button', async ({ page }) => {
+            await createBlog(page, "blog", 'Nikunj', 'www.google.com');
+            await page.getByRole('button', { name: 'Logout' }).click();
+            await loginwith(page, 'test', 'test');
+            await page.getByText('blog byNikunjView').waitFor();
+            const blogDiv = page.getByText('blog byNikunjView')
+            await blogDiv.getByRole('button', { name: 'View' }).click();
+            await expect(blogDiv.getByText('Delete')).not.toBeVisible();
         })
 
     })
