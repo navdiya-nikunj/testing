@@ -1,17 +1,19 @@
 const { test, expect, beforeEach, describe } = require('@playwright/test')
-import { loginwith } from './helper'
+import { createBlog, loginwith } from './helper'
 
 describe('Blog app', () => {
     beforeEach(async ({ page, request }) => {
         await page.goto('http://localhost:5173')
-        await request.post('http://localhost:3003/api/testing/reset');
-        await request.post('http://localhost:3003/api/users', {
+        const ress = await request.post('http://localhost:3003/api/testing/reset');
+        console.log("resss", ress);
+        const res = await request.post('http://localhost:3003/api/users', {
             data: {
                 name: "Testt",
                 username: 'root',
                 password: 'root'
             }
         })
+        console.log(res);
     })
 
     test('Login form is shown', async ({ page }) => {
@@ -42,13 +44,22 @@ describe('Blog app', () => {
         })
 
         test('a new blog can be created', async ({ page }) => {
-            await page.getByRole('button', { name: 'Add Blog' }).click();
-            await page.getByTestId('blogTitle').fill("Title of blog");
-            await page.getByTestId('blogAuthor').fill('Nikunj');
-            await page.getByTestId('blogURL').fill('www.google.com');
-            await page.getByRole('button', { name: 'Create' }).click();
+            await createBlog(page, "Title of blog", 'Nikunj', 'www.google.com');
             await expect(page.getByText('Title of blog by Nikunj is added')).toBeVisible();
         })
+
+        test('a blog can be liked', async ({ page }) => {
+            await createBlog(page, "blog", 'Nikunj', 'www.google.com');
+
+            await page.getByText('blog byNikunjView').waitFor();
+            const blogDiv = page.getByText('blog byNikunjView');
+            await blogDiv.getByRole('button', { name: 'View' }).click();
+
+            await page.getByRole('button', { name: 'Like', exact: 'true' }).click();
+            await expect(page.getByText('Likes: 1')).toBeVisible();
+
+        })
+
     })
 
 })
